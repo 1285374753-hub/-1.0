@@ -14,42 +14,32 @@
             padding: 0;
             color: white;
             -webkit-tap-highlight-color: transparent;
-            overflow: hidden; /* 防止外层拉拽，强制内部滑动 */
+            overflow: hidden;
         }
 
-        /* 手机框架包裹器 - 变身为短视频滑动容器 */
         .mobile-wrapper {
             width: 100%;
             max-width: 480px;
             margin: 0 auto;
             background-color: #000;
             height: 100vh;
-            height: 100dvh; /* 适配手机浏览器的动态视口高度 */
+            height: 100dvh;
             position: relative;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
-            
-            /* 短视频核心滑动逻辑 */
+            box-shadow: 0 0 40px rgba(0,0,0,0.9);
             overflow-y: scroll;
             scroll-snap-type: y mandatory;
             scroll-behavior: smooth;
         }
 
-        /* 隐藏滚动条 */
-        .mobile-wrapper::-webkit-scrollbar {
-            display: none;
-        }
-        .mobile-wrapper {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        .mobile-wrapper::-webkit-scrollbar { display: none; }
+        .mobile-wrapper { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* 每一屏的基础设置 */
         .swipe-page {
             height: 100vh;
             height: 100dvh;
             width: 100%;
-            scroll-snap-align: start; /* 强制对齐顶部 */
-            scroll-snap-stop: always; /* 每次只滑动一屏 */
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
             position: relative;
             overflow: hidden;
             display: flex;
@@ -58,135 +48,325 @@
             background-color: #051429;
         }
 
-        /* 图片自适应铺满 (类似满屏短视频) */
-        .swipe-page img {
+        .swipe-page img.bg-poster {
             width: 100%;
             height: 100%;
             object-fit: cover;
             object-position: center top;
+            /* 基础暗化，让特效更明显 */
+            filter: brightness(0.9); 
         }
 
-        /* 呼吸缩放动效 (当该屏处于视口中心时触发) */
-        .swipe-page.active img {
-            animation: scale-in 4s ease-out forwards;
+        /* 呼吸缩放动效 */
+        .swipe-page.active img.bg-poster {
+            /* 新增了高光呼吸动效 backlight-breathe */
+            animation: scale-in 5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards, backlight-breathe 2s infinite alternate ease-in-out;
+            filter: brightness(1);
         }
         @keyframes scale-in {
-            0% { transform: scale(1.05); }
+            0% { transform: scale(1.1); }
             100% { transform: scale(1); }
         }
 
-        .font-game {
-            font-family: 'Fredoka One', cursive;
+        .font-game { font-family: 'Fredoka One', cursive; }
+
+        /* --- 新增：图片高光背光闪烁特效 --- */
+        .backlight-flash-layer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            /* 核心魔法：color-dodge 会让底图的“亮部”极度发光闪烁，而“暗部”几乎保持原样 */
+            mix-blend-mode: color-dodge; 
+            z-index: 2; /* 盖在背景图之上，但在气泡和文字之下 */
+        }
+        
+        .backlight-flash-layer::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -150%;
+            width: 80%; height: 100%;
+            /* 一道偏金黄色的强光 */
+            background: linear-gradient(
+                to right, 
+                rgba(255,255,255,0) 0%, 
+                rgba(255, 245, 180, 0.8) 50%, 
+                rgba(255,255,255,0) 100%
+            );
+            transform: skewX(-30deg);
+            /* 每 4 秒扫过闪烁一次 */
+            animation: highlight-sweep-flash 4s infinite;
         }
 
-        /* 按钮发光 */
-        .btn-glow {
-            animation: pulse-glow 2s infinite alternate;
+        @keyframes highlight-sweep-flash {
+            0% { left: -100%; opacity: 0; }
+            5% { opacity: 1; }
+            25% { left: 200%; opacity: 1; }
+            100% { left: 200%; opacity: 0; }
         }
-        @keyframes pulse-glow {
-            0% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.4), inset 0 0 5px rgba(255, 255, 255, 0.2); transform: scale(1); }
-            100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.4); transform: scale(1.03); }
+
+        /* 整体背光呼吸发散 */
+        @keyframes backlight-breathe {
+            0% { filter: brightness(1) contrast(1); }
+            100% { filter: brightness(1.2) contrast(1.15) saturate(1.1); }
+        }
+
+        /* --- 新增：极度炫酷的光效与动画 --- */
+
+        /* 1. 黄金扫光特效 (金属反光) */
+        .shimmer-effect {
+            position: relative;
+            overflow: hidden;
+        }
+        .shimmer-effect::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -150%;
+            width: 50%; height: 100%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 100%);
+            transform: skewX(-25deg);
+            animation: shimmer-sweep 3s infinite;
+        }
+        @keyframes shimmer-sweep {
+            0% { left: -150%; }
+            50%, 100% { left: 200%; }
+        }
+
+        /* 2. 深海发光气泡特效 */
+        .bubbles-container {
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            overflow: hidden;
+        }
+        .bubble {
+            position: absolute;
+            bottom: -50px;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.9), rgba(76, 208, 255, 0.2));
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(76, 208, 255, 0.6), inset 0 0 8px rgba(255,255,255,0.8);
+            animation: float-up infinite ease-in-out;
+        }
+        /* 生成不同大小和速度的气泡 */
+        .bubble:nth-child(1) { left: 10%; width: 15px; height: 15px; animation-duration: 4s; animation-delay: 0s; }
+        .bubble:nth-child(2) { left: 25%; width: 25px; height: 25px; animation-duration: 6s; animation-delay: 1s; }
+        .bubble:nth-child(3) { left: 40%; width: 10px; height: 10px; animation-duration: 3.5s; animation-delay: 2s; }
+        .bubble:nth-child(4) { left: 60%; width: 30px; height: 30px; animation-duration: 7s; animation-delay: 0.5s; }
+        .bubble:nth-child(5) { left: 80%; width: 20px; height: 20px; animation-duration: 5s; animation-delay: 2.5s; }
+        .bubble:nth-child(6) { left: 15%; width: 12px; height: 12px; animation-duration: 4.5s; animation-delay: 1.5s; }
+        .bubble:nth-child(7) { left: 35%; width: 22px; height: 22px; animation-duration: 5.5s; animation-delay: 0.2s; }
+        .bubble:nth-child(8) { left: 55%; width: 18px; height: 18px; animation-duration: 6.5s; animation-delay: 3s; }
+        .bubble:nth-child(9) { left: 75%; width: 14px; height: 14px; animation-duration: 4.2s; animation-delay: 1.2s; }
+        .bubble:nth-child(10) { left: 90%; width: 28px; height: 28px; animation-duration: 7.5s; animation-delay: 2.1s; }
+        .bubble:nth-child(11) { left: 5%; width: 16px; height: 16px; animation-duration: 5.2s; animation-delay: 3.5s; }
+        .bubble:nth-child(12) { left: 45%; width: 24px; height: 24px; animation-duration: 6.2s; animation-delay: 0.8s; }
+
+        @keyframes float-up {
+            0% { transform: translateY(0) translateX(0) scale(0.8); opacity: 0; }
+            20% { opacity: 0.8; }
+            50% { transform: translateY(-50vh) translateX(20px) scale(1.1); opacity: 1; }
+            80% { opacity: 0.8; }
+            100% { transform: translateY(-110vh) translateX(-20px) scale(0.5); opacity: 0; }
+        }
+
+        /* 3. 联动入场弹跳动画 */
+        .pop-in {
+            opacity: 0;
+            transform: translateY(40px) scale(0.8);
+            transition: opacity 0.6s ease-out, transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .swipe-page.active .pop-in {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        /* 延迟效果，让元素按顺序跳出来 */
+        .delay-100 { transition-delay: 0.1s; }
+        .delay-200 { transition-delay: 0.2s; }
+
+        /* 按钮与底栏的脉冲光晕 */
+        .glow-pulse {
+            animation: glow-pulse 2s infinite alternate;
+        }
+        @keyframes glow-pulse {
+            0% { box-shadow: 0 0 10px rgba(255, 152, 0, 0.4), inset 0 0 5px rgba(255, 255, 255, 0.1); }
+            100% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.9), inset 0 0 10px rgba(255, 255, 255, 0.3); }
         }
 
         .shiny-text {
-            background: linear-gradient(to bottom, #fffde7 0%, #ffd700 50%, #ff8c00 100%);
+            background: linear-gradient(to bottom, #ffffff 0%, #ffeb3b 40%, #ff9800 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0px 2px 4px rgba(0,0,0,0.5);
+            text-shadow: 0px 3px 10px rgba(255, 152, 0, 0.5);
         }
 
-        /* 向上滑动提示动画 */
         .swipe-up-indicator {
             position: absolute;
-            bottom: 140px; /* 避开底部下载栏 */
+            bottom: 140px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
             flex-direction: column;
             align-items: center;
             animation: bounce-up 1.5s infinite;
-            opacity: 0.8;
-            pointer-events: none;
             z-index: 10;
+            pointer-events: none;
         }
         @keyframes bounce-up {
-            0%, 100% { transform: translate(-50%, 0); opacity: 0.5; }
-            50% { transform: translate(-50%, -15px); opacity: 1; }
+            0%, 100% { transform: translate(-50%, 0); opacity: 0.4; filter: drop-shadow(0 0 2px rgba(255,255,255,0)); }
+            50% { transform: translate(-50%, -15px); opacity: 1; filter: drop-shadow(0 0 8px rgba(76,208,255,0.8)); }
         }
 
-        /* 毛玻璃样式增强版 */
         .ios-glass {
-            background: rgba(5, 20, 41, 0.65);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border-top: 1px solid rgba(255,255,255,0.15);
+            background: rgba(5, 20, 41, 0.7);
+            backdrop-filter: blur(24px) saturate(200%);
+            -webkit-backdrop-filter: blur(24px) saturate(200%);
+            border-top: 1px solid rgba(255,255,255,0.25);
+        }
+
+        /* 音乐控制按钮样式 */
+        .music-btn {
+            position: absolute;
+            top: 20px;
+            right: 15px;
+            width: 38px;
+            height: 38px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid #ffd700;
+            border-radius: 50%;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffd700;
+            font-size: 16px;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            backdrop-filter: blur(4px);
+            opacity: 0.6;
+            transition: opacity 0.3s;
+        }
+        .music-btn.playing {
+            opacity: 1;
+            animation: spin-record 4s linear infinite;
+        }
+        @keyframes spin-record {
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
 
-<div class="mobile-wrapper">
-    
-    <!-- 第 1 屏：首屏主视觉 -->
+<div class="mobile-wrapper relative">
+
+    <!-- 背景音乐配置 -->
+    <audio id="bgMusic" loop preload="auto">
+        <!-- 请将准备好的纯音乐命名为 bgm.mp3 放在同级目录下 -->
+        <source src="bgm.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- 音乐控制开关 (右上角) -->
+    <div id="musicBtn" class="music-btn cursor-pointer" onclick="toggleMusic(event)">
+        🎵
+    </div>
+
+    <!-- 修复：补回第 1 屏缺失的 swipe-page 容器包裹层 -->
     <div class="swipe-page cursor-pointer active" onclick="redirectToStore()">
-        <img src="poster_01_hero.jpg" alt="Desafie o Monstro das Profundezas">
         
-        <!-- 向上滑动提示 -->
-        <div class="swipe-up-indicator">
+        <!-- 全局特效层：深海气泡 -->
+        <div class="bubbles-container">
+            <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+            <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+            <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+        </div>
+        
+        <img src="poster_01_hero.jpg" alt="Desafie o Monstro das Profundezas" class="bg-poster">
+        <!-- 新增：高光闪烁图层 -->
+        <div class="backlight-flash-layer"></div>
+        
+        <div class="swipe-up-indicator pop-in delay-200">
             <span class="text-white text-xs font-bold tracking-widest uppercase mb-1 drop-shadow-md">Deslize para cima</span>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-[#4cd0ff] drop-shadow-[0_0_10px_rgba(76,208,255,1)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
             </svg>
         </div>
-        <!-- 底部渐变遮罩，防止白色海报盖住底部文字 -->
-        <div class="absolute bottom-0 w-full h-1/3 bg-gradient-to-t from-[#000] to-transparent pointer-events-none"></div>
+        <div class="absolute bottom-0 w-full h-1/2 bg-gradient-to-t from-[#000] via-[#00000080] to-transparent pointer-events-none"></div>
     </div>
 
     <!-- 第 2 屏：炮台升级 -->
     <div class="swipe-page cursor-pointer" onclick="redirectToStore()">
-        <img src="poster_02_cannon.jpg" alt="Despertar do Canhão">
-        <div class="absolute bottom-0 w-full h-1/3 bg-gradient-to-t from-[#000] to-transparent pointer-events-none"></div>
+        <div class="bubbles-container">
+            <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+            <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+            <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+        </div>
+        <img src="poster_02_cannon.jpg" alt="Despertar do Canhão" class="bg-poster">
+        <!-- 新增：高光闪烁图层 -->
+        <div class="backlight-flash-layer"></div>
+        <div class="absolute bottom-0 w-full h-1/3 bg-gradient-to-t from-[#000] to-transparent pointer-events-none z-10"></div>
     </div>
 
     <!-- 第 3 屏：万倍炮台与金龟 -->
     <div class="swipe-page cursor-pointer" onclick="redirectToStore()">
-        <img src="poster_03_10000x.jpg" alt="Canhão de 10.000x">
-        <div class="absolute bottom-0 w-full h-1/3 bg-gradient-to-t from-[#000] to-transparent pointer-events-none"></div>
+        <div class="bubbles-container">
+            <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+            <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+            <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+        </div>
+        <img src="poster_03_10000x.jpg" alt="Canhão de 10.000x" class="bg-poster">
+        <!-- 新增：高光闪烁图层 -->
+        <div class="backlight-flash-layer"></div>
+        <div class="absolute bottom-0 w-full h-1/3 bg-gradient-to-t from-[#000] to-transparent pointer-events-none z-10"></div>
     </div>
 
     <!-- 第 4 屏：超长游戏截图展示拼接 -->
     <div class="swipe-page cursor-pointer" onclick="redirectToStore()">
-        <img src="poster_04_kraken.jpg" alt="Mais Jogabilidade">
+        <div class="bubbles-container">
+            <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+            <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+            <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+        </div>
+        <img src="poster_04_kraken.jpg" alt="Mais Jogabilidade" class="bg-poster">
+        <!-- 新增：高光闪烁图层 -->
+        <div class="backlight-flash-layer"></div>
         
-        <!-- 顶部悬浮文字 -->
-        <div class="absolute top-[8%] w-full flex flex-col items-center pointer-events-none drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] z-10">
-            <h2 class="font-game text-3xl shiny-text text-center tracking-wide">Prêmios Sem Fim</h2>
-            <p class="text-[#4cd0ff] font-bold text-sm text-center mt-1">Novo Boss Épico Chegou!</p>
+        <!-- 顶部悬浮文字 (带爆点弹跳入场特效) -->
+        <div class="absolute top-[8%] w-full flex flex-col items-center pointer-events-none z-20">
+            <h2 class="font-game text-4xl shiny-text text-center tracking-wide pop-in">Prêmios Sem Fim!</h2>
+            <div class="pop-in delay-100 bg-gradient-to-r from-transparent via-[#4cd0ff]/30 to-transparent w-full py-1 mt-2">
+                <p class="text-white font-bold text-sm text-center drop-shadow-[0_2px_4px_rgba(0,0,0,1)]">✨ Novo Boss Épico Chegou ✨</p>
+            </div>
         </div>
 
-        <div class="absolute bottom-0 w-full h-1/3 bg-gradient-to-t from-[#000] to-transparent pointer-events-none"></div>
+        <div class="absolute bottom-0 w-full h-1/3 bg-gradient-to-t from-[#000] to-transparent pointer-events-none z-10"></div>
     </div>
 
-    <!-- 底部悬浮栏 - 升级为 iOS 毛玻璃悬浮岛 -->
-    <div class="ios-glass fixed bottom-0 w-full max-w-[480px] left-1/2 transform -translate-x-1/2 rounded-t-[32px] p-5 pb-6 flex items-center justify-between z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
-        <div class="flex items-center gap-3">
-            <!-- 应用图标加上 iOS 标准的亮边内阴影 -->
-            <div class="w-14 h-14 rounded-2xl overflow-hidden shadow-lg border border-white/20 bg-gradient-to-br from-[#ffd700] to-[#ff8c00] shrink-0 relative box-border">
+    <!-- 底部悬浮栏 - 升级为 iOS 毛玻璃悬浮岛 + 光效 -->
+    <div class="ios-glass fixed bottom-0 w-full max-w-[480px] left-1/2 transform -translate-x-1/2 rounded-t-[32px] p-5 pb-6 flex items-center justify-between z-50 shadow-[0_-15px_40px_rgba(0,0,0,0.8)] border-t border-[#4cd0ff]/30">
+        
+        <!-- 背景流光 -->
+        <div class="absolute inset-0 rounded-t-[32px] overflow-hidden pointer-events-none">
+            <div class="w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent shimmer-effect opacity-50"></div>
+        </div>
+
+        <div class="flex items-center gap-3 relative z-10">
+            <!-- 应用图标带微光 -->
+            <div class="w-14 h-14 rounded-[18px] overflow-hidden shadow-[0_0_15px_rgba(255,215,0,0.4)] border-2 border-[#ffd700] bg-gradient-to-br from-[#ffd700] to-[#ff8c00] shrink-0 relative box-border">
                 <img src="app_icon.png" alt="App Icon" class="w-full h-full object-cover relative z-10" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                 <div style="display: none;" class="absolute inset-0 w-full h-full items-center justify-center text-[28px] z-0">🐟</div>
-                <!-- 模拟图标上方的反光遮罩 -->
-                <div class="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent pointer-events-none z-20"></div>
+                <div class="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent pointer-events-none z-20"></div>
             </div>
             
             <div class="flex flex-col justify-center">
-                <span class="font-game text-white text-lg leading-tight line-clamp-1 drop-shadow-md">Mestre da Pesca</span>
-                <span class="text-white text-xs font-bold bg-gradient-to-r from-[#ff4500] to-[#ff0055] px-2.5 py-0.5 rounded-full inline-block mt-1 w-max shadow-sm">
+                <span class="font-game text-white text-lg leading-tight line-clamp-1 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Mestre da Pesca</span>
+                <span class="shimmer-effect text-white text-[11px] font-black bg-gradient-to-r from-[#ff3d00] to-[#ff0055] px-3 py-1 rounded-full inline-block mt-1 w-max shadow-[0_2px_10px_rgba(255,0,85,0.6)] uppercase tracking-wider">
                     🎁 10.000 Moedas
                 </span>
             </div>
         </div>
         
-        <button onclick="redirectToStore()" class="btn-glow font-game bg-gradient-to-b from-[#ffed4a] to-[#ff9800] text-[#5b2a00] px-6 py-3.5 rounded-full uppercase tracking-wider shadow-lg transform transition active:scale-95">
+        <!-- 下载按钮：扫光 + 脉冲呼吸双重光效 -->
+        <button onclick="redirectToStore()" class="shimmer-effect glow-pulse relative z-10 font-game bg-gradient-to-b from-[#fffc00] via-[#ffb300] to-[#ff8c00] text-[#5b2a00] px-6 py-3.5 rounded-full uppercase tracking-widest text-sm shadow-[0_5px_15px_rgba(255,152,0,0.6)] transform transition active:scale-90 border-b-4 border-[#c76500]">
             BAIXAR
         </button>
     </div>
@@ -194,7 +374,7 @@
 </div>
 
 <script>
-    // 短视频滑动监听：当页面滑入时添加 active 类触发呼吸缩放动画
+    // 短视频滑动监听：触发呼吸缩放和元素的入场动画(pop-in)
     document.addEventListener('DOMContentLoaded', () => {
         const wrapper = document.querySelector('.mobile-wrapper');
         const pages = document.querySelectorAll('.swipe-page');
@@ -202,15 +382,18 @@
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    // 移除所有页面的 active
+                    // 移除所有页面的 active 状态
                     pages.forEach(p => p.classList.remove('active'));
-                    // 给当前处于视口中心的页面添加 active 触发缓慢放大动画
-                    entry.target.classList.add('active');
+                    
+                    // 利用 requestAnimationFrame 确保移除动画帧生效后，再重新添加触发动画
+                    requestAnimationFrame(() => {
+                        entry.target.classList.add('active');
+                    });
                 }
             });
         }, {
-            root: wrapper, // 以滑动容器为视口
-            threshold: 0.5 // 超过 50% 可见时认为已滑入该屏
+            root: wrapper,
+            threshold: 0.6 // 超过 60% 可见时认为已滑入该屏，动画触发更精准
         });
 
         pages.forEach((el) => {
@@ -218,15 +401,60 @@
         });
     });
 
-    // 模拟跳转到应用商店的函数
+    // --- 音乐播放控制逻辑 ---
+    const bgMusic = document.getElementById('bgMusic');
+    const musicBtn = document.getElementById('musicBtn');
+    let isMusicPlaying = false;
+
+    function toggleMusic(event) {
+        // 阻止点击事件穿透到底层的图片导致触发下载跳转
+        event.stopPropagation(); 
+        
+        if (isMusicPlaying) {
+            bgMusic.pause();
+            musicBtn.classList.remove('playing');
+        } else {
+            bgMusic.play().catch(e => console.log("请先与页面交互"));
+            musicBtn.classList.add('playing');
+        }
+        isMusicPlaying = !isMusicPlaying;
+    }
+
+    // 增强版：尝试在用户第一次任意交互（触摸、滑动、点击、滚轮）时自动播放
+    const autoPlayMusic = () => {
+        if (!isMusicPlaying) {
+            // 尝试播放音乐
+            const playPromise = bgMusic.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    isMusicPlaying = true;
+                    musicBtn.classList.add('playing');
+                    // 成功播放后，移除所有的监听事件，避免重复触发消耗性能
+                    ['touchstart', 'touchmove', 'mousedown', 'wheel'].forEach(evt => {
+                        window.removeEventListener(evt, autoPlayMusic);
+                    });
+                }).catch(error => {
+                    // 浏览器有时会拦截非主观意愿的播放，捕获异常防止报错
+                    console.log("等待更明确的用户交互...");
+                });
+            }
+        }
+    };
+
+    // 绑定所有的第一次交互事件
+    ['touchstart', 'touchmove', 'mousedown', 'wheel'].forEach(evt => {
+        window.addEventListener(evt, autoPlayMusic, { passive: true });
+    });
+
+    // 模拟跳转
     function redirectToStore() {
         const confirmMsg = document.createElement('div');
         confirmMsg.innerHTML = `
-            <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; display:flex; align-items:center; justify-content:center;">
-                <div style="background:#0a2e5c; border: 2px solid #ffd700; border-radius:1rem; padding:2rem; max-width:80%; text-align:center;">
-                    <h2 class="font-game shiny-text text-2xl mb-2">Redirecionando...</h2>
-                    <p style="color:white; margin-bottom:1rem;">Você será redirecionado para a loja de aplicativos!</p>
-                    <button onclick="this.parentElement.parentElement.remove()" style="background:#ff9800; color:white; font-weight:bold; padding:0.5rem 2rem; border-radius:999px;">OK</button>
+            <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; display:flex; align-items:center; justify-content:center; backdrop-filter: blur(5px);">
+                <div style="background:linear-gradient(135deg, #0a2e5c, #020813); border: 2px solid #ffd700; border-radius:24px; padding:2.5rem; max-width:85%; text-align:center; box-shadow: 0 0 30px rgba(255,215,0,0.3);">
+                    <h2 class="font-game shiny-text text-3xl mb-3">Redirecionando...</h2>
+                    <p style="color:#4cd0ff; margin-bottom:1.5rem; font-weight:bold;">Prepare-se para conquistar o oceano!</p>
+                    <button onclick="this.parentElement.parentElement.remove()" style="background:linear-gradient(to bottom, #ffeb3b, #ff9800); color:#5b2a00; font-weight:900; padding:0.8rem 2.5rem; border-radius:999px; text-transform: uppercase; box-shadow: 0 4px 15px rgba(255,152,0,0.5);">OK</button>
                 </div>
             </div>
         `;
